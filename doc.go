@@ -41,6 +41,31 @@
 //	vals, ok := tmpl.FromURL(u)
 //	// vals["user"] = String("octocat"), vals["sort"] = String("updated")
 //
+// # Working with net/http
+//
+// A [Template] can act as an HTTP handler that dispatches to another handler
+// when the request URL matches the template. This integrates naturally with
+// [net/http.ServeMux]:
+//
+//	mux := http.NewServeMux()
+//	tmpl := uritemplate.MustParse("/users/{user}/repos{?sort,page}")
+//	mux.Handle("/users/", tmpl.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//	    vals := uritemplate.ValuesFromRequest(r)
+//	    user := vals["user"]
+//	    // ...
+//	})))
+//
+// The handler matches incoming request URLs against the template pattern.
+// When a request matches, the extracted variable values are stored in the
+// request context and the inner handler is called. When there is no match,
+// the handler responds with 404 Not Found.
+//
+// Use [ValuesFromRequest] or [ValuesFromContext] to retrieve extracted values
+// in the inner handler:
+//
+//	vals := uritemplate.ValuesFromRequest(r)
+//	user := vals["user"]  // uritemplate.Value
+//
 // # Variable Types
 //
 // RFC 6570 supports three types of variable values:

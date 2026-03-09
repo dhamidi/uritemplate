@@ -2,6 +2,8 @@ package uritemplate_test
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
 
 	"github.com/dhamidi/uritemplate"
@@ -241,6 +243,55 @@ func ExampleKeys() {
 	uri, _ := tmpl.Expand(vals)
 	fmt.Println(uri)
 	// Output: ?width=100&height=200
+}
+
+func ExampleTemplate_Handler() {
+	tmpl := uritemplate.MustParse("/users/{user}")
+	handler := tmpl.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vals := uritemplate.ValuesFromRequest(r)
+		// Re-expand to show the matched values work
+		uri, _ := tmpl.Expand(vals)
+		fmt.Fprint(w, uri)
+	}))
+
+	req := httptest.NewRequest("GET", "/users/alice", nil)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	fmt.Println(rec.Body.String())
+	// Output: /users/alice
+}
+
+func ExampleTemplate_HandlerFunc() {
+	tmpl := uritemplate.MustParse("/repos/{owner}/{repo}")
+	handler := tmpl.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vals := uritemplate.ValuesFromRequest(r)
+		uri, _ := tmpl.Expand(vals)
+		fmt.Fprint(w, uri)
+	})
+
+	req := httptest.NewRequest("GET", "/repos/octocat/hello-world", nil)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	fmt.Println(rec.Body.String())
+	// Output: /repos/octocat/hello-world
+}
+
+func ExampleValuesFromRequest() {
+	tmpl := uritemplate.MustParse("/search{?q}")
+	handler := tmpl.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vals := uritemplate.ValuesFromRequest(r)
+		result, _ := tmpl.Expand(vals)
+		fmt.Fprint(w, result)
+	})
+
+	req := httptest.NewRequest("GET", "/search?q=hello", nil)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	fmt.Println(rec.Body.String())
+	// Output: /search?q=hello
 }
 
 func ExampleTemplate_String() {

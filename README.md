@@ -98,6 +98,24 @@ vals, ok := tmpl.FromURL(u)
 // vals["q"] = "hello", vals["lang"] = "en"
 ```
 
+## Integration with net/http
+
+A template can act as an HTTP handler, matching incoming requests and extracting variables:
+
+```go
+mux := http.NewServeMux()
+tmpl := uritemplate.MustParse("/users/{user}/repos{?sort,page}")
+mux.Handle("/users/", tmpl.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    vals := uritemplate.ValuesFromRequest(r)
+    user := vals["user"]
+    // ...
+})))
+```
+
+When a request URL matches the template, extracted values are stored in the request context. When there is no match, the handler responds with 404 Not Found.
+
+Use `ValuesFromRequest(r)` or `ValuesFromContext(ctx)` to retrieve the extracted values in the inner handler.
+
 ## API Overview
 
 | Function / Method     | Description                                         |
@@ -108,7 +126,11 @@ vals, ok := tmpl.FromURL(u)
 | `Template.URL(v)`     | Expand into a `*url.URL`                             |
 | `Template.Match(s)`   | Extract variables from a URI string                  |
 | `Template.FromURL(u)` | Extract variables from a `*url.URL`                  |
+| `Template.Handler(h)` | Return an HTTP handler that matches requests         |
+| `Template.HandlerFunc(f)` | Convenience wrapper accepting a handler function |
 | `Template.String()`   | Return the original template string                  |
+| `ValuesFromRequest(r)` | Extract template values from a request context       |
+| `ValuesFromContext(ctx)` | Extract template values from a context             |
 | `String(s)`           | Create a string variable value                       |
 | `List(items...)`      | Create a list variable value                         |
 | `Keys(pairs...)`      | Create an associative array variable value           |
