@@ -55,25 +55,13 @@ type part interface {
 	expand(w io.Writer, vars Values) error
 }
 
-// Values is a placeholder for template variable values.
-type Values interface{}
-
 // literal is a plain string part of a template.
 type literal string
-
-func (l literal) expand(w io.Writer, vars Values) error {
-	_, err := io.WriteString(w, string(l))
-	return err
-}
 
 // expression is a template expression like {var}, {+var}, {#var}, etc.
 type expression struct {
 	operator operator
 	vars     []varSpec
-}
-
-func (e *expression) expand(w io.Writer, vars Values) error {
-	return nil
 }
 
 // Template is a parsed URI template consisting of literal and expression parts.
